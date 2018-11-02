@@ -218,9 +218,9 @@ public class PolygonDrawHelper {
      * 计算维度坐标
      */
     public static void computeDimPoint(List<Float> pointListX, List<Float> pointListY, float centerX, float centerY, List<Float> dims, float radiusMax, float dimMax, int sideCount) {
-        for (int cornerNumber = 0; cornerNumber < sideCount; cornerNumber++) {
-            final double angleToCorner = cornerNumber * (360.0 / sideCount);
-            float radius = dims.get(cornerNumber) * radiusMax / dimMax;
+        for (int index = 0; index < sideCount; index++) {
+            final double angleToCorner = index * (360.0 / sideCount);
+            float radius = dims.get(index) * radiusMax / dimMax;
             pointListX.add((float) (centerX + radius * cos(toRadians(angleToCorner))));
             pointListY.add((float) (centerY + radius * sin(toRadians(angleToCorner))));
         }

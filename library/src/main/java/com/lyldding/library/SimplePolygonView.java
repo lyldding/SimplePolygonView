@@ -38,19 +38,19 @@ public class SimplePolygonView extends View {
     /**
      * radius max dp value
      */
-    private int dpRadiusMax = 100;
+    private int dpRadiusMax;
     /**
      * dimension max dp value
      */
-    private float dpDimMax = 100;
+    private float dpDimMax;
     /**
      * layer value
      */
-    private int layers = 3;
+    private int layers;
     /**
      * side value
      */
-    private int sides = 5;
+    private int sides;
 
     private PolygonDrawHelper polygonDrawHelper;
     //各层
@@ -67,13 +67,13 @@ public class SimplePolygonView extends View {
     private Paint circleFillPaint;
 
 
-    private float cornerRadius = 20;
-    private float rotation = 270;
-    private float scale = 1;
+    private float cornerRadius;
+    private float rotation;
+    private float scale;
     private float pxDimMax;
     private float pxRadiusMax;
-    private float radiusCircleBottom = 11;
-    private float radiusCircleTop = 8;
+    private float radiusCircleBottom;
+    private float radiusCircleTop;
 
     private final Path strokePath = new Path();
 
@@ -92,14 +92,37 @@ public class SimplePolygonView extends View {
     private float centerX = 0;
     private float centerY = 0;
 
+    public SimplePolygonView(Context context) {
+        this(context, null);
+    }
+
     public SimplePolygonView(final Context context, @Nullable final AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
+
+    }
+
+    public SimplePolygonView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+
+        layers = 3;
+        sides = 5;
+        rotation = 0;
+        cornerRadius = 20;
+        radiusCircleBottom = 11;
+        radiusCircleTop = 8;
+        scale = 1;
+        dpRadiusMax = 100;
+        dpDimMax = 100;
         init(context);
     }
 
     private void init(Context context) {
         mDimNums = new ArrayList<>(sides);
         mColors = new ArrayList<>(sides);
+        for (int index = 0; index < sides; index++) {
+            mDimNums.add((float) Utils.dp2px(context, dpDimMax * 0.6f));
+            mColors.add("#FF4040");
+        }
         maxPointListX = new ArrayList<>(sides);
         maxPointListY = new ArrayList<>(sides);
         minPointListX = new ArrayList<>(sides);
@@ -110,24 +133,24 @@ public class SimplePolygonView extends View {
         polygonDrawHelper = new PolygonDrawHelper();
 
         polygonStrokePaint = new Paint(ANTI_ALIAS_FLAG);
-        polygonStrokePaint.setColor(Color.parseColor("#B7BBC0"));
+        polygonStrokePaint.setColor(Color.BLACK);
         polygonStrokePaint.setStyle(Paint.Style.STROKE);
 
         polygonFillPaint = new Paint(ANTI_ALIAS_FLAG);
-        polygonFillPaint.setColor(Color.parseColor("#E2E2E2"));
+        polygonFillPaint.setColor(Color.LTGRAY);
         polygonFillPaint.setStyle(Paint.Style.FILL);
 
         sidePaint = new Paint(ANTI_ALIAS_FLAG);
-        sidePaint.setColor(Color.parseColor("#B7BBC0"));
+        sidePaint.setColor(Color.GRAY);
         sidePaint.setStyle(Paint.Style.STROKE);
         sidePaint.setStrokeWidth(1);
 
         areaFillPaint = new Paint(ANTI_ALIAS_FLAG);
-        areaFillPaint.setColor(Color.parseColor("#6637B0CD"));
+        areaFillPaint.setColor(Color.parseColor("#44FFDEAD"));
         areaFillPaint.setStyle(Paint.Style.FILL);
 
         areaStrokePaint = new Paint(ANTI_ALIAS_FLAG);
-        areaStrokePaint.setColor(Color.parseColor("#37B0CD"));
+        areaStrokePaint.setColor(Color.YELLOW);
         areaStrokePaint.setStyle(Paint.Style.STROKE);
         areaStrokePaint.setStrokeWidth(6);
 
@@ -152,7 +175,7 @@ public class SimplePolygonView extends View {
     }
 
     private void drawPolygon(Canvas canvas) {
-        for (int i = 1; i <= sides; i++) {
+        for (int i = 1; i <= layers; i++) {
             float radius = pxRadiusMax * i / layers;
             if (i == 1) {
                 polygonDrawHelper.drawPolygon(
@@ -218,9 +241,9 @@ public class SimplePolygonView extends View {
         rotationMatrix.setRotate(rotation, centerX, centerY);
         for (int i = 0; i < sides; i++) {
             if (i == 0) {
-                path.moveTo(dimPointListX.get(i), dimPointListX.get(i));
+                path.moveTo(dimPointListX.get(i), dimPointListY.get(i));
             } else {
-                path.lineTo(dimPointListX.get(i), dimPointListX.get(i));
+                path.lineTo(dimPointListX.get(i), dimPointListY.get(i));
             }
         }
         path.close();
@@ -235,7 +258,7 @@ public class SimplePolygonView extends View {
         canvas.save();
         canvas.setMatrix(rotationMatrix);
         for (int i = 0; i < sides; i++) {
-            circleFillPaint.setColor(Color.parseColor("#FFFFFF"));
+            circleFillPaint.setColor(Color.WHITE);
             canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), radiusCircleBottom, circleFillPaint);
             circleFillPaint.setColor(Color.parseColor(mColors.get(i)));
             canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), radiusCircleTop, circleFillPaint);
