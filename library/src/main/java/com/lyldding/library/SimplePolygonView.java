@@ -19,11 +19,12 @@ package com.lyldding.library;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
+import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import static android.graphics.Paint.ANTI_ALIAS_FLAG;
  * @author lyldding
  */
 public class SimplePolygonView extends View {
+    private static final String TAG = "SimplePolygonView";
     /**
      * radius max dp value
      */
@@ -47,12 +49,14 @@ public class SimplePolygonView extends View {
      * layer value
      */
     private int layers;
+
+    private int outerLayer;
+    private int innerLayer;
     /**
      * side value
      */
     private int sides;
 
-    private PolygonDrawHelper polygonDrawHelper;
     //各层
     private Paint polygonStrokePaint;
     //各层填充
@@ -113,6 +117,8 @@ public class SimplePolygonView extends View {
         scale = 1;
         dpRadiusMax = 100;
         dpDimMax = 100;
+        outerLayer = layers;
+        innerLayer = 1;
         init(context);
     }
 
@@ -130,11 +136,7 @@ public class SimplePolygonView extends View {
         dimPointListX = new ArrayList<>(sides);
         dimPointListY = new ArrayList<>(sides);
 
-        polygonDrawHelper = new PolygonDrawHelper();
-
         polygonStrokePaint = new Paint(ANTI_ALIAS_FLAG);
-        polygonStrokePaint.setColor(Color.BLACK);
-        polygonStrokePaint.setStyle(Paint.Style.STROKE);
 
         polygonFillPaint = new Paint(ANTI_ALIAS_FLAG);
         polygonFillPaint.setColor(Color.LTGRAY);
@@ -167,54 +169,38 @@ public class SimplePolygonView extends View {
 
         centerX = getWidth() / 2;
         centerY = getHeight() / 2;
-        drawPolygon(canvas);
-        computeDimPoint();
+        canvas.translate(centerX, centerY);
+        canvas.rotate(rotation);
+
+        computePoint();
+
         drawLine(canvas);
+        drawPolygon(canvas);
         drawDimArea(canvas);
         drawCircle(canvas);
+    }
+
+    private void computePoint() {
+        PolygonDrawHelper.getInstance().computeDimPoint(dimPointListX, dimPointListY, mDimNums, pxRadiusMax, pxDimMax, sides);
+        PolygonDrawHelper.getInstance().computeVertexPoint(minPointListX, minPointListY, pxRadiusMax * innerLayer / layers, sides);
+        PolygonDrawHelper.getInstance().computeVertexPoint(maxPointListX, maxPointListY, pxRadiusMax * outerLayer / layers, sides);
     }
 
     private void drawPolygon(Canvas canvas) {
         for (int i = 1; i <= layers; i++) {
             float radius = pxRadiusMax * i / layers;
-            if (i == 1) {
-                polygonDrawHelper.drawPolygon(
-                        canvas,
-                        sides,
-                        centerX,
-                        centerY,
-                        radius,
-                        cornerRadius,
-                        rotation,
-                        polygonFillPaint);
-                PolygonDrawHelper.computeVertexPoint(minPointListX, minPointListY, centerX, centerY, radius - cornerRadius / 2, sides);
+            if (i == innerLayer) {
+                polygonFillPaint.setPathEffect(new CornerPathEffect(cornerRadius * i / sides));
+                PolygonDrawHelper.getInstance().drawPolygon(canvas, sides, radius, polygonFillPaint);
             }
-            if (i == layers) {
-                PolygonDrawHelper.computeVertexPoint(maxPointListX, maxPointListY, centerX, centerY, radius - cornerRadius / 2, sides);
-            }
-
-            polygonStrokePaint.setStrokeWidth(i == layers ? 6 : 1);
-            polygonDrawHelper.constructPolygonPath(
-                    strokePath,
-                    sides,
-                    centerX,
-                    centerY,
-                    radius,
-                    cornerRadius,
-                    rotation);
-
-            canvas.drawPath(strokePath, polygonStrokePaint);
+            polygonStrokePaint.reset();
+            polygonStrokePaint.setColor(Color.BLACK);
+            polygonStrokePaint.setStyle(Paint.Style.STROKE);
+            polygonStrokePaint.setPathEffect(new CornerPathEffect(cornerRadius * i / sides));
+            Log.d(TAG, "drawPolygon: i != layers  " + (i != layers));
+            polygonStrokePaint.setStrokeWidth(i != layers ? 1 : 6);
+            PolygonDrawHelper.getInstance().drawPath(canvas, sides, radius, polygonStrokePaint);
         }
-    }
-
-    private void computeDimPoint() {
-        PolygonDrawHelper.computeDimPoint(dimPointListX, dimPointListY,
-                centerX,
-                centerY,
-                mDimNums,
-                pxRadiusMax,
-                pxDimMax,
-                sides);
     }
 
     /**
@@ -223,13 +209,10 @@ public class SimplePolygonView extends View {
     private void drawLine(Canvas canvas) {
 
         Path path = new Path();
-        final Matrix rotationMatrix = new Matrix();
-        rotationMatrix.setRotate(rotation, centerX, centerY);
         for (int i = 0; i < sides; i++) {
             path.reset();
             path.moveTo(minPointListX.get(i), minPointListY.get(i));
             path.lineTo(maxPointListX.get(i), maxPointListY.get(i));
-            path.transform(rotationMatrix);
             canvas.drawPath(path, sidePaint);
         }
     }
@@ -237,8 +220,6 @@ public class SimplePolygonView extends View {
     private void drawDimArea(Canvas canvas) {
         Path path = new Path();
         path.reset();
-        Matrix rotationMatrix = new Matrix();
-        rotationMatrix.setRotate(rotation, centerX, centerY);
         for (int i = 0; i < sides; i++) {
             if (i == 0) {
                 path.moveTo(dimPointListX.get(i), dimPointListY.get(i));
@@ -247,16 +228,12 @@ public class SimplePolygonView extends View {
             }
         }
         path.close();
-        path.transform(rotationMatrix);
         canvas.drawPath(path, areaFillPaint);
         canvas.drawPath(path, areaStrokePaint);
     }
 
     private void drawCircle(Canvas canvas) {
-        Matrix rotationMatrix = new Matrix();
-        rotationMatrix.setRotate(rotation, centerX, centerY);
         canvas.save();
-        canvas.setMatrix(rotationMatrix);
         for (int i = 0; i < sides; i++) {
             circleFillPaint.setColor(Color.WHITE);
             canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), radiusCircleBottom, circleFillPaint);
