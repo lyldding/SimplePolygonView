@@ -24,7 +24,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -56,6 +55,8 @@ public class SimplePolygonView extends View {
      * side value
      */
     private int sides;
+
+    private int outerStrokeWidth;
 
     //各层
     private Paint polygonStrokePaint;
@@ -114,11 +115,12 @@ public class SimplePolygonView extends View {
         cornerRadius = 20;
         radiusCircleBottom = 11;
         radiusCircleTop = 8;
-        scale = 1;
+        scale = 2;
         dpRadiusMax = 100;
         dpDimMax = 100;
         outerLayer = layers;
         innerLayer = 1;
+        outerStrokeWidth = 6;
         init(context);
     }
 
@@ -137,6 +139,8 @@ public class SimplePolygonView extends View {
         dimPointListY = new ArrayList<>(sides);
 
         polygonStrokePaint = new Paint(ANTI_ALIAS_FLAG);
+        polygonStrokePaint.setColor(Color.BLACK);
+        polygonStrokePaint.setStyle(Paint.Style.STROKE);
 
         polygonFillPaint = new Paint(ANTI_ALIAS_FLAG);
         polygonFillPaint.setColor(Color.LTGRAY);
@@ -169,6 +173,7 @@ public class SimplePolygonView extends View {
 
         centerX = getWidth() / 2;
         centerY = getHeight() / 2;
+        pxRadiusMax = scale * (pxRadiusMax);
         canvas.translate(centerX, centerY);
         canvas.rotate(rotation);
 
@@ -182,23 +187,20 @@ public class SimplePolygonView extends View {
 
     private void computePoint() {
         PolygonDrawHelper.getInstance().computeDimPoint(dimPointListX, dimPointListY, mDimNums, pxRadiusMax, pxDimMax, sides);
-        PolygonDrawHelper.getInstance().computeVertexPoint(minPointListX, minPointListY, pxRadiusMax * innerLayer / layers, sides);
-        PolygonDrawHelper.getInstance().computeVertexPoint(maxPointListX, maxPointListY, pxRadiusMax * outerLayer / layers, sides);
+        PolygonDrawHelper.getInstance().computeVertexPoint(minPointListX, minPointListY, pxRadiusMax * innerLayer / layers, sides,cornerRadius);
+        PolygonDrawHelper.getInstance().computeVertexPoint(maxPointListX, maxPointListY, pxRadiusMax * outerLayer / layers, sides,cornerRadius);
     }
 
     private void drawPolygon(Canvas canvas) {
         for (int i = 1; i <= layers; i++) {
             float radius = pxRadiusMax * i / layers;
             if (i == innerLayer) {
-                polygonFillPaint.setPathEffect(new CornerPathEffect(cornerRadius * i / sides));
+                polygonFillPaint.setPathEffect(new CornerPathEffect(cornerRadius));
                 PolygonDrawHelper.getInstance().drawPolygon(canvas, sides, radius, polygonFillPaint);
             }
-            polygonStrokePaint.reset();
-            polygonStrokePaint.setColor(Color.BLACK);
-            polygonStrokePaint.setStyle(Paint.Style.STROKE);
-            polygonStrokePaint.setPathEffect(new CornerPathEffect(cornerRadius * i / sides));
-            Log.d(TAG, "drawPolygon: i != layers  " + (i != layers));
-            polygonStrokePaint.setStrokeWidth(i != layers ? 1 : 6);
+
+            polygonStrokePaint.setStrokeWidth(i != layers ? 1f : outerStrokeWidth);
+            polygonStrokePaint.setPathEffect(new CornerPathEffect(cornerRadius));
             PolygonDrawHelper.getInstance().drawPath(canvas, sides, radius, polygonStrokePaint);
         }
     }

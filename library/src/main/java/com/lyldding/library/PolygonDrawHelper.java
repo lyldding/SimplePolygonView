@@ -25,10 +25,6 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
-import static java.lang.Math.PI;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-
 /**
  * @author lyldding
  */
@@ -39,13 +35,21 @@ public class PolygonDrawHelper {
     }
 
     private static class InstanceHolder {
-        private static final PolygonDrawHelper INSTACE = new PolygonDrawHelper();
+        private static final PolygonDrawHelper INSTANCE = new PolygonDrawHelper();
     }
 
     public static PolygonDrawHelper getInstance() {
-        return InstanceHolder.INSTACE;
+        return InstanceHolder.INSTANCE;
     }
 
+    /**
+     * 绘制多边形区域
+     *
+     * @param canvas
+     * @param sideCount 边数
+     * @param radius    半径
+     * @param paint     画笔
+     */
     public void drawPolygon(
             @NonNull final Canvas canvas,
             @IntRange(from = 3) final int sideCount,
@@ -60,25 +64,15 @@ public class PolygonDrawHelper {
         canvas.drawPath(tempPath, paint);
     }
 
-    public void constructPolygonPath(
-            @NonNull final Path path,
-            @IntRange(from = 3) final int sideCount,
-            @FloatRange(from = 0, fromInclusive = false) final float radius) {
 
-        for (int index = 0; index < sideCount; index++) {
-            final double angleToCorner = index * (360.0 / sideCount);
-            final float cornerX = (float) (radius * cos(toRadians(angleToCorner)));
-            final float cornerY = (float) (radius * sin(toRadians(angleToCorner)));
-
-            if (index == 0) {
-                path.moveTo(cornerX, cornerY);
-            } else {
-                path.lineTo(cornerX, cornerY);
-            }
-        }
-        path.close();
-    }
-
+    /**
+     * 绘制路径
+     *
+     * @param canvas
+     * @param sideCount 边数
+     * @param radius    半径
+     * @param paint     画笔
+     */
     public void drawPath(
             @NonNull final Canvas canvas,
             @IntRange(from = 3) final int sideCount,
@@ -94,31 +88,84 @@ public class PolygonDrawHelper {
     }
 
     /**
-     * 计算定点坐标
+     * 构建路径
+     *
+     * @param path      路径
+     * @param sideCount 边数
+     * @param radius    半径
      */
-    public void computeVertexPoint(List<Float> pointListX, List<Float> pointListY, float radius, int sideCount) {
+    public void constructPolygonPath(
+            @NonNull final Path path,
+            @IntRange(from = 3) final int sideCount,
+            @FloatRange(from = 0, fromInclusive = false) final float radius) {
+        path.reset();
+        for (int index = 0; index < sideCount; index++) {
+            final double angleToCorner = index * (360.0 / sideCount);
+            final float cornerX = (float) (radius * Math.cos(toRadians(angleToCorner)));
+            final float cornerY = (float) (radius * Math.sin(toRadians(angleToCorner)));
+
+            if (index == 0) {
+                path.moveTo(cornerX, cornerY);
+            } else {
+                path.lineTo(cornerX, cornerY);
+            }
+        }
+        path.close();
+    }
+
+
+    /**
+     * 计算定点坐标
+     *
+     * @param pointListX X轴坐标
+     * @param pointListY Y轴坐标
+     * @param radius     半径
+     * @param sideCount  边数
+     */
+    public void computeVertexPoint(List<Float> pointListX, List<Float> pointListY, float radius, int sideCount, float cornerRadius) {
+        double realRadius = computeRealRadius(radius, cornerRadius, sideCount);
         for (int cornerNumber = 0; cornerNumber < sideCount; cornerNumber++) {
             final double angleToCorner = cornerNumber * (360.0 / sideCount);
-            pointListX.add((float) (radius * cos(toRadians(angleToCorner))));
-            pointListY.add((float) (radius * sin(toRadians(angleToCorner))));
+            pointListX.add((float) (realRadius * Math.cos(toRadians(angleToCorner))));
+            pointListY.add((float) (realRadius * Math.sin(toRadians(angleToCorner))));
         }
     }
 
     /**
+     * 计算顶点的真实半径
+     *
+     * @param radius       半径
+     * @param cornerRadius 弧度半径
+     * @param sideCount    边数
+     * @return 真实半径
+     */
+    private double computeRealRadius(float radius, float cornerRadius, int sideCount) {
+        double angleToCorner = 90 - (360.0f / sideCount) / 2;
+        return radius - (cornerRadius / Math.sin(toRadians(angleToCorner)) - cornerRadius);
+    }
+
+    /**
      * 计算维度坐标
+     *
+     * @param pointListX X轴坐标
+     * @param pointListY Y轴坐标
+     * @param dims       各个维度值
+     * @param dimMax     维度最大值
+     * @param radiusMax  半径最大值
+     * @param sideCount  边数
      */
     public void computeDimPoint(List<Float> pointListX, List<Float> pointListY, List<Float> dims, float radiusMax, float dimMax, int sideCount) {
         for (int index = 0; index < sideCount; index++) {
             final double angleToCorner = index * (360.0 / sideCount);
             float radius = dims.get(index) * radiusMax / dimMax;
-            pointListX.add((float) (radius * cos(toRadians(angleToCorner))));
-            pointListY.add((float) (radius * sin(toRadians(angleToCorner))));
+            pointListX.add((float) (radius * Math.cos(toRadians(angleToCorner))));
+            pointListY.add((float) (radius * Math.sin(toRadians(angleToCorner))));
         }
     }
 
 
     private static double toRadians(final double degrees) {
-        return 2 * PI * degrees / 360;
+        return 2 * Math.PI * degrees / 360;
     }
 
 }
