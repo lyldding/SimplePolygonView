@@ -1,23 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="SimplePolygonView">
+        <!--层数-->
         <attr name="polygon_layers" format="integer" />
+        <!--边数-->
         <attr name="polygon_sides" format="integer" />
+        <!--旋转度-->
         <attr name="polygon_rotation" format="integer" />
+        <!--圆角半径-->
         <attr name="polygon_cornerRadius" format="integer" />
+        <!--维度顶点圆背景半径-->
         <attr name="polygon_dimCircleRadiusBackground" format="integer" />
+        <!--维度顶点圆半径-->
         <attr name="polygon_dimCircleRadius" format="integer" />
+        <!--多边形伸缩-->
         <attr name="polygon_scale" format="float" />
+        <!--最外层半径-->
         <attr name="polygon_radiusMax" format="integer" />
+        <!--指定内层-->
         <attr name="polygon_innerLayer" format="integer" />
+        <!--最外层边宽度-->
         <attr name="polygon_outerStrokeWidth" format="integer" />
 
-        <attr name="polygon_StrokeColor" format="reference|color" />
+        <!--层边颜色-->
+        <attr name="polygon_strokeColor" format="reference|color" />
+        <!--指定内层填充颜色-->
         <attr name="polygon_innerFillColor" format="reference|color" />
+        <!--顶点到圆心连线颜色-->
         <attr name="polygon_vertexLinePaintColor" format="reference|color" />
+        <!--维度区域填充色-->
         <attr name="polygon_dimFillColor" format="reference|color" />
+        <!--维度区域边颜色-->
         <attr name="polygon_dimStrokeColor" format="reference|color" />
+        <!--维度区域顶点背景填充色-->
         <attr name="polygon_dimCircleColorBackground" format="reference|color" />
+        <!--维度区域顶点填充色-->
         <attr name="polygon_dimCircleColor" format="reference|color" />
 
     </declare-styleable>

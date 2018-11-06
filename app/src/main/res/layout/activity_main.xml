@@ -7,13 +7,13 @@
     android:gravity="center_horizontal"
     android:orientation="vertical"
     tools:context=".MainActivity">
-
+    <!--view-->
     <com.lyldding.library.SimplePolygonView
         android:id="@+id/demo_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:polygon_radiusMax="60" />
-
+    <!--view1-->
     <com.lyldding.library.SimplePolygonView
         android:id="@+id/demo_view1"
         android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
         app:polygon_rotation="270"
         app:polygon_sides="3"
         app:polygon_vertexLinePaintColor="@color/colorAccent" />
-
+    <!--view2-->
     <com.lyldding.library.SimplePolygonView
         android:id="@+id/demo_view2"
         android:layout_width="wrap_content"
@@ -37,7 +37,7 @@
         app:polygon_rotation="270"
         app:polygon_sides="3"
         app:polygon_vertexLinePaintColor="@color/colorAccent" />
-
+    <!--view3-->
     <com.lyldding.library.SimplePolygonView
         android:id="@+id/demo_view3"
         android:layout_width="wrap_content"

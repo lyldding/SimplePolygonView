@@ -149,7 +149,7 @@ public class SimplePolygonView extends View {
         radiusMax = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_radiusMax, 100));
 
         innerLayer = array.getInt(R.styleable.SimplePolygonView_polygon_innerLayer, 0);
-        if (innerLayer > 0 && innerLayer <= sides) {
+        if (innerLayer < 0 || innerLayer > sides) {
             throw new IllegalArgumentException(TAG + " : polygon_innerLayer 0< innerLayer <= sides");
         }
         outerStrokeWidth = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_outerStrokeWidth, 2));
@@ -231,7 +231,7 @@ public class SimplePolygonView extends View {
         centerX = getWidth() / 2;
         centerY = getHeight() / 2;
         radiusMaxScale -= outerStrokeWidth / 2;
-        canvas.translate(getWidth() / 2, getHeight() / 2);
+        canvas.translate(centerX, centerY);
         canvas.rotate(rotation);
 
         computePoint();
