@@ -10,6 +10,26 @@ blog：https://blog.csdn.net/lylddingHFFW/article/details/83789078
 <img src="https://img-blog.csdnimg.cn/201811061606340.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x5bGRkaW5nSEZGVw==,size_16,color_FFFFFF,t_70"
 width ="40%" /></div>
 
+gradle：
+
+```
+ allprojects {
+  repositories {
+   ...
+   maven { url 'https://jitpack.io' }
+  }
+ }
+ ```
+ 
+dependency：
+
+```
+ dependencies {
+         implementation 'com.github.lyldding:SimplePolygonView:Tag'
+ }
+
+```
+
 
 ### xml代码：
 
