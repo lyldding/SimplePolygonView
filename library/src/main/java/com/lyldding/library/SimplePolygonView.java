@@ -154,7 +154,7 @@ public class SimplePolygonView extends View {
         }
         outerStrokeWidth = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_outerStrokeWidth, 2));
 
-        polygonStrokeColor = array.getColor(R.styleable.SimplePolygonView_polygon_StrokeColor, Color.BLACK);
+        polygonStrokeColor = array.getColor(R.styleable.SimplePolygonView_polygon_strokeColor, Color.BLACK);
         polygonInnerFillColor = array.getColor(R.styleable.SimplePolygonView_polygon_innerFillColor, Color.LTGRAY);
         vertexLinePaintColor = array.getColor(R.styleable.SimplePolygonView_polygon_vertexLinePaintColor, Color.GRAY);
         dimFillColor = array.getColor(R.styleable.SimplePolygonView_polygon_dimFillColor, Color.parseColor("#44FFDEAD"));
