@@ -25,7 +25,7 @@ dependency：
 
 ```
  dependencies {
-         implementation 'com.github.lyldding:SimplePolygonView:Tag'
+         implementation 'com.github.lyldding:SimplePolygonView:1.0.2'
  }
 
 ```
