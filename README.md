@@ -1,6 +1,8 @@
+
 SimplePolygonView 可以轻松构建构建M边N层的正多边形统计图，以及各维度的显示。
-原文地址：https://blog.csdn.net/lylddingHFFW/article/details/83789078
-GitHub源码：https://github.com/lyldding/SimplePolygonView
+
+blog：https://blog.csdn.net/lylddingHFFW/article/details/83789078
+
 
 ### 效果图展示： (上传图片被压缩了不清晰)
 
