@@ -7,8 +7,8 @@ blog：https://blog.csdn.net/lylddingHFFW/article/details/83789078
 ### 效果图展示： (上传图片被压缩了不清晰)
 
 <div align="center">
-<img src="https://img-blog.csdnimg.cn/201811061606340.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x5bGRkaW5nSEZGVw==,size_16,color_FFFFFF,t_70"
-width ="40%" /></div>
+<img src="https://img-blog.csdnimg.cn/201811061606340.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x5bGRkaW5nSEZGVw==,size_16,color_FFFFFF,t_70"  width ="40%" />
+</div>
 
 gradle：
 
