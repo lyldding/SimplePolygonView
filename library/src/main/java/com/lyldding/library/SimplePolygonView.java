@@ -17,11 +17,13 @@
 package com.lyldding.library;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.support.annotation.ColorInt;
+import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -36,51 +38,74 @@ import static android.graphics.Paint.ANTI_ALIAS_FLAG;
  */
 public class SimplePolygonView extends View {
     private static final String TAG = "SimplePolygonView";
+
     /**
-     * radius max dp value
+     * 最外围半径
      */
-    private int dpRadiusMax;
+    private int radiusMax;
     /**
-     * dimension max dp value
+     * true 显示维度区域
      */
-    private float dpDimMax;
+    private boolean isShowDim;
+
     /**
-     * layer value
+     * the value of layer
      */
     private int layers;
-
-    private int outerLayer;
+    /**
+     * 指定内层
+     */
     private int innerLayer;
     /**
-     * side value
+     * the value of side
      */
     private int sides;
-
+    /**
+     * 最外层宽度
+     */
     private int outerStrokeWidth;
 
-    //各层
+    /**
+     * 正多边形各边颜色
+     */
     private Paint polygonStrokePaint;
-    //各层填充
-    private Paint polygonFillPaint;
-    //圆心到顶点连线
-    private Paint sidePaint;
-    //覆盖区域
-    private Paint areaFillPaint;
-    //覆盖区域连线
-    private Paint areaStrokePaint;
-    //覆盖区顶点圆
-    private Paint circleFillPaint;
+    private int polygonStrokeColor;
+    /**
+     * 最内层多边形填充颜色
+     */
+    private Paint polygonInnerFillPaint;
+    private int polygonInnerFillColor;
+    /**
+     * 各层顶点之间连线
+     */
+    private Paint vertexLinePaint;
+    private int vertexLinePaintColor;
+    /**
+     * 维度区域填充颜色
+     */
+    private Paint dimFillPaint;
+    private int dimFillColor;
+    /**
+     * 维度边线颜色
+     */
+    private Paint dimStrokePaint;
+    private int dimStrokeColor;
+    /**
+     * 维度顶点圆颜色填充
+     */
+    private Paint dimCircleFillPaint;
+    private int dimCircleColorBackground;
+    private int dimCircleColor;
+
+    private Path tempPath;
 
 
     private float cornerRadius;
     private float rotation;
     private float scale;
-    private float pxDimMax;
-    private float pxRadiusMax;
-    private float radiusCircleBottom;
-    private float radiusCircleTop;
-
-    private final Path strokePath = new Path();
+    private int radiusMaxScale;
+    private float dimCircleRadiusBackground;
+    private float dimCircleRadius;
 
     private List<Float> maxPointListX;
     private List<Float> maxPointListY;
@@ -91,11 +116,11 @@ public class SimplePolygonView extends View {
     private List<Float> dimPointListX;
     private List<Float> dimPointListY;
 
-    private List<Float> mDimNums;
-    private List<String> mColors;
+    private List<Float> mDimPercentages;
+    private float centerX;
+    private float centerY;
 
-    private float centerX = 0;
-    private float centerY = 0;
+    private Context context;
 
     public SimplePolygonView(Context context) {
         this(context, null);
@@ -108,100 +133,142 @@ public class SimplePolygonView extends View {
 
     public SimplePolygonView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        this.context = context;
 
-        layers = 3;
-        sides = 5;
-        rotation = 0;
-        cornerRadius = 20;
-        radiusCircleBottom = 11;
-        radiusCircleTop = 8;
-        scale = 2;
-        dpRadiusMax = 100;
-        dpDimMax = 100;
-        outerLayer = layers;
-        innerLayer = 1;
-        outerStrokeWidth = 6;
+        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.SimplePolygonView);
+        layers = array.getInt(R.styleable.SimplePolygonView_polygon_layers, 3);
+        if (layers < 1) {
+            throw new IllegalArgumentException(TAG + " : polygon_layers should >= 1");
+        }
+        sides = array.getInt(R.styleable.SimplePolygonView_polygon_sides, 5);
+        rotation = array.getInt(R.styleable.SimplePolygonView_polygon_rotation, 0);
+        cornerRadius = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_cornerRadius, 7));
+        dimCircleRadiusBackground = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_dimCircleRadiusBackground, 5));
+        dimCircleRadius = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_dimCircleRadius, 4));
+        scale = array.getFloat(R.styleable.SimplePolygonView_polygon_scale, 1.0f);
+        radiusMax = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_radiusMax, 100));
+
+        innerLayer = array.getInt(R.styleable.SimplePolygonView_polygon_innerLayer, 0);
+        if (innerLayer > 0 && innerLayer <= sides) {
+            throw new IllegalArgumentException(TAG + " : polygon_innerLayer 0< innerLayer <= sides");
+        }
+        outerStrokeWidth = Utils.dp2px(context, array.getInt(R.styleable.SimplePolygonView_polygon_outerStrokeWidth, 2));
+
+        polygonStrokeColor = array.getColor(R.styleable.SimplePolygonView_polygon_StrokeColor, Color.BLACK);
+        polygonInnerFillColor = array.getColor(R.styleable.SimplePolygonView_polygon_innerFillColor, Color.LTGRAY);
+        vertexLinePaintColor = array.getColor(R.styleable.SimplePolygonView_polygon_vertexLinePaintColor, Color.GRAY);
+        dimFillColor = array.getColor(R.styleable.SimplePolygonView_polygon_dimFillColor, Color.parseColor("#44FFDEAD"));
+        dimStrokeColor = array.getColor(R.styleable.SimplePolygonView_polygon_dimStrokeColor, Color.YELLOW);
+        dimCircleColorBackground = array.getColor(R.styleable.SimplePolygonView_polygon_dimCircleColorBackground, Color.WHITE);
+        dimCircleColor = array.getColor(R.styleable.SimplePolygonView_polygon_dimCircleColor, Color.RED);
+
+        array.recycle();
         init(context);
     }
 
     private void init(Context context) {
-        mDimNums = new ArrayList<>(sides);
-        mColors = new ArrayList<>(sides);
-        for (int index = 0; index < sides; index++) {
-            mDimNums.add((float) Utils.dp2px(context, dpDimMax * 0.6f));
-            mColors.add("#FF4040");
-        }
-        maxPointListX = new ArrayList<>(sides);
-        maxPointListY = new ArrayList<>(sides);
-        minPointListX = new ArrayList<>(sides);
-        minPointListY = new ArrayList<>(sides);
-        dimPointListX = new ArrayList<>(sides);
-        dimPointListY = new ArrayList<>(sides);
+        mDimPercentages = new ArrayList<>();
+        maxPointListX = new ArrayList<>();
+        maxPointListY = new ArrayList<>();
+        minPointListX = new ArrayList<>();
+        minPointListY = new ArrayList<>();
+        dimPointListX = new ArrayList<>();
+        dimPointListY = new ArrayList<>();
 
         polygonStrokePaint = new Paint(ANTI_ALIAS_FLAG);
-        polygonStrokePaint.setColor(Color.BLACK);
+        polygonStrokePaint.setColor(polygonStrokeColor);
         polygonStrokePaint.setStyle(Paint.Style.STROKE);
 
-        polygonFillPaint = new Paint(ANTI_ALIAS_FLAG);
-        polygonFillPaint.setColor(Color.LTGRAY);
-        polygonFillPaint.setStyle(Paint.Style.FILL);
+        polygonInnerFillPaint = new Paint(ANTI_ALIAS_FLAG);
+        polygonInnerFillPaint.setColor(polygonInnerFillColor);
+        polygonInnerFillPaint.setStyle(Paint.Style.FILL);
 
-        sidePaint = new Paint(ANTI_ALIAS_FLAG);
-        sidePaint.setColor(Color.GRAY);
-        sidePaint.setStyle(Paint.Style.STROKE);
-        sidePaint.setStrokeWidth(1);
+        vertexLinePaint = new Paint(ANTI_ALIAS_FLAG);
+        vertexLinePaint.setColor(vertexLinePaintColor);
+        vertexLinePaint.setStyle(Paint.Style.STROKE);
+        vertexLinePaint.setStrokeWidth(1);
 
-        areaFillPaint = new Paint(ANTI_ALIAS_FLAG);
-        areaFillPaint.setColor(Color.parseColor("#44FFDEAD"));
-        areaFillPaint.setStyle(Paint.Style.FILL);
+        dimFillPaint = new Paint(ANTI_ALIAS_FLAG);
+        dimFillPaint.setColor(dimFillColor);
+        dimFillPaint.setStyle(Paint.Style.FILL);
 
-        areaStrokePaint = new Paint(ANTI_ALIAS_FLAG);
-        areaStrokePaint.setColor(Color.YELLOW);
-        areaStrokePaint.setStyle(Paint.Style.STROKE);
-        areaStrokePaint.setStrokeWidth(6);
+        dimStrokePaint = new Paint(ANTI_ALIAS_FLAG);
+        dimStrokePaint.setColor(dimStrokeColor);
+        dimStrokePaint.setStyle(Paint.Style.STROKE);
+        dimStrokePaint.setStrokeWidth(outerStrokeWidth);
 
-        circleFillPaint = new Paint(ANTI_ALIAS_FLAG);
-        circleFillPaint.setStyle(Paint.Style.FILL);
+        dimCircleFillPaint = new Paint(ANTI_ALIAS_FLAG);
+        dimCircleFillPaint.setStyle(Paint.Style.FILL);
 
-        pxRadiusMax = Utils.dp2px(context, dpRadiusMax);
-        pxDimMax = Utils.dp2px(context, dpDimMax);
+        tempPath = new Path();
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        radiusMaxScale = (int) (scale * (radiusMax));
+        setMeasuredDimension(computeMeasuredDimension(widthMeasureSpec, radiusMaxScale * 2), computeMeasuredDimension(heightMeasureSpec, radiusMaxScale * 2));
+    }
+
+    private int computeMeasuredDimension(int measureSpec, int defaultSize) {
+        int size = defaultSize;
+        int specMode = MeasureSpec.getMode(measureSpec);
+        int specSize = MeasureSpec.getSize(measureSpec);
+
+        if (specMode == MeasureSpec.EXACTLY) {
+            size = specSize;
+        } else if (specMode == MeasureSpec.AT_MOST) {
+            size = defaultSize;
+        } else if (specMode == MeasureSpec.UNSPECIFIED) {
+            size = defaultSize;
+        }
+        return size;
     }
 
     @Override
     protected void onDraw(final Canvas canvas) {
         super.onDraw(canvas);
-
         centerX = getWidth() / 2;
         centerY = getHeight() / 2;
-        pxRadiusMax = scale * (pxRadiusMax);
-        canvas.translate(centerX, centerY);
+        radiusMaxScale -= outerStrokeWidth / 2;
+        canvas.translate(getWidth() / 2, getHeight() / 2);
         canvas.rotate(rotation);
 
         computePoint();
 
         drawLine(canvas);
         drawPolygon(canvas);
-        drawDimArea(canvas);
-        drawCircle(canvas);
+        if (isShowDim) {
+            drawDimArea(canvas);
+            drawDimCircle(canvas);
+        }
     }
 
+    /**
+     * 计算顶点位置
+     */
     private void computePoint() {
-        PolygonDrawHelper.getInstance().computeDimPoint(dimPointListX, dimPointListY, mDimNums, pxRadiusMax, pxDimMax, sides);
-        PolygonDrawHelper.getInstance().computeVertexPoint(minPointListX, minPointListY, pxRadiusMax * innerLayer / layers, sides,cornerRadius);
-        PolygonDrawHelper.getInstance().computeVertexPoint(maxPointListX, maxPointListY, pxRadiusMax * outerLayer / layers, sides,cornerRadius);
+        if (isShowDim) {
+            PolygonDrawHelper.getInstance().computeDimPoint(dimPointListX, dimPointListY, mDimPercentages, radiusMaxScale, sides);
+        }
+        PolygonDrawHelper.getInstance().computeVertexPoint(minPointListX, minPointListY, radiusMaxScale * innerLayer / layers, sides, cornerRadius * innerLayer / layers);
+        PolygonDrawHelper.getInstance().computeVertexPoint(maxPointListX, maxPointListY, radiusMaxScale, sides, cornerRadius);
     }
 
+    /**
+     * 绘制多边形
+     */
     private void drawPolygon(Canvas canvas) {
         for (int i = 1; i <= layers; i++) {
-            float radius = pxRadiusMax * i / layers;
+            float radius = radiusMaxScale * i / layers;
             if (i == innerLayer) {
-                polygonFillPaint.setPathEffect(new CornerPathEffect(cornerRadius));
-                PolygonDrawHelper.getInstance().drawPolygon(canvas, sides, radius, polygonFillPaint);
+                // polygonInnerFillPaint.setPathEffect(new CornerPathEffect(cornerRadius * i / layers));
+                PolygonDrawHelper.getInstance().drawPolygon(canvas, sides, centerX, centerY, radius, cornerRadius * i / layers, polygonInnerFillPaint);
             }
 
             polygonStrokePaint.setStrokeWidth(i != layers ? 1f : outerStrokeWidth);
-            polygonStrokePaint.setPathEffect(new CornerPathEffect(cornerRadius));
-            PolygonDrawHelper.getInstance().drawPath(canvas, sides, radius, polygonStrokePaint);
+            //polygonStrokePaint.setPathEffect(new CornerPathEffect(cornerRadius * i / layers));
+            PolygonDrawHelper.getInstance().drawPath(canvas, sides, centerX, centerY, radius, cornerRadius * i / layers, polygonStrokePaint);
         }
     }
 
@@ -209,71 +276,192 @@ public class SimplePolygonView extends View {
      * 画出从中心向各顶点的连线
      */
     private void drawLine(Canvas canvas) {
-
-        Path path = new Path();
         for (int i = 0; i < sides; i++) {
-            path.reset();
-            path.moveTo(minPointListX.get(i), minPointListY.get(i));
-            path.lineTo(maxPointListX.get(i), maxPointListY.get(i));
-            canvas.drawPath(path, sidePaint);
+            tempPath.reset();
+            tempPath.moveTo(minPointListX.get(i), minPointListY.get(i));
+            tempPath.lineTo(maxPointListX.get(i), maxPointListY.get(i));
+            canvas.drawPath(tempPath, vertexLinePaint);
         }
     }
 
+    /**
+     * 绘制维度区域
+     */
     private void drawDimArea(Canvas canvas) {
-        Path path = new Path();
-        path.reset();
+        tempPath.reset();
         for (int i = 0; i < sides; i++) {
             if (i == 0) {
-                path.moveTo(dimPointListX.get(i), dimPointListY.get(i));
+                tempPath.moveTo(dimPointListX.get(i), dimPointListY.get(i));
             } else {
-                path.lineTo(dimPointListX.get(i), dimPointListY.get(i));
+                tempPath.lineTo(dimPointListX.get(i), dimPointListY.get(i));
             }
         }
-        path.close();
-        canvas.drawPath(path, areaFillPaint);
-        canvas.drawPath(path, areaStrokePaint);
+        tempPath.close();
+        canvas.drawPath(tempPath, dimFillPaint);
+        canvas.drawPath(tempPath, dimStrokePaint);
     }
 
-    private void drawCircle(Canvas canvas) {
-        canvas.save();
+    /**
+     * 绘制维度顶点
+     */
+    private void drawDimCircle(Canvas canvas) {
         for (int i = 0; i < sides; i++) {
-            circleFillPaint.setColor(Color.WHITE);
-            canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), radiusCircleBottom, circleFillPaint);
-            circleFillPaint.setColor(Color.parseColor(mColors.get(i)));
-            canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), radiusCircleTop, circleFillPaint);
+            dimCircleFillPaint.setColor(dimCircleColorBackground);
+            canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), dimCircleRadiusBackground, dimCircleFillPaint);
+            dimCircleFillPaint.setColor(dimCircleColor);
+            canvas.drawCircle(dimPointListX.get(i), dimPointListY.get(i), dimCircleRadius, dimCircleFillPaint);
         }
-        canvas.restore();
     }
 
-    public int getNumberOfSides() {
+
+    /**
+     * @param layers 多边形层数
+     */
+    public void setPolygonLayers(@IntRange(from = 1) int layers) {
+        this.layers = layers;
+    }
+
+    /**
+     * @return 多边形边数
+     */
+    public int getSides() {
         return sides;
     }
 
-    public void setNumberOfSides(final int numberOfSides) {
-        this.sides = numberOfSides;
-        invalidate();
+    /**
+     * @param sides 多边形边数
+     */
+    public void setPolygonSides(@IntRange(from = 3) int sides) {
+        this.sides = sides;
     }
 
-    public void setCornerRadius(final float cornerRadius) {
-        this.cornerRadius = cornerRadius;
-        invalidate();
-    }
-
-    public void setPolygonRotation(final float rotation) {
+    /**
+     * @param rotation 多边形旋转角度
+     */
+    public void setPolygonRotation(int rotation) {
         this.rotation = rotation;
-        invalidate();
     }
 
-    public void setScale(final float scale) {
+    /**
+     * @param cornerRadius 圆角弧度半径
+     */
+    public void setPolygonCornerRadius(int cornerRadius) {
+        this.cornerRadius = Utils.dp2px(context, cornerRadius);
+    }
+
+    /**
+     * @param radius 维度圆点背景半径
+     */
+    public void setPolygonDimCircleRadiusBackground(int radius) {
+        this.dimCircleRadiusBackground = Utils.dp2px(context, radius);
+    }
+
+    /**
+     * @param radius 维度圆点半径
+     */
+    public void setPolygonDimCircleRadius(int radius) {
+        this.dimCircleRadius = Utils.dp2px(context, radius);
+    }
+
+    /**
+     * @param scale 多边形scale
+     */
+    public void setPolygonScale(float scale) {
         this.scale = scale;
-        invalidate();
     }
 
-    public void setDimNums(List<Float> dimNums) {
-        mDimNums = dimNums;
+    /**
+     * @param value 多边形最外围半径
+     */
+    public void setPolygonRadiusMax(int value) {
+        this.radiusMax = Utils.dp2px(context, value);
     }
 
-    public void setDimCircleColor(List<String> colors) {
-        mColors = colors;
+    /**
+     * @param value 多边形指定内层
+     */
+    public void setPolygonInnerLayer(int value) {
+        this.innerLayer = value;
+    }
+
+    /**
+     * @param value 多边形最外层边宽度
+     */
+    public void setPolygonOuterStrokeWidth(int value) {
+        this.outerStrokeWidth = Utils.dp2px(context, value);
+    }
+
+    /**
+     * @param isShowDim true 显示维度区域
+     */
+    public void setPolygonShowDim(boolean isShowDim) {
+        if (sides != mDimPercentages.size()) {
+            throw new IllegalArgumentException(TAG + " : should  setDimPercentages() first.");
+        }
+        this.isShowDim = isShowDim;
+    }
+
+    /**
+     * @param dimPercentages 每个维度的百分比值 0.0 - 1.0
+     */
+    public void setDimPercentages(List<Float> dimPercentages) {
+        if (sides != dimPercentages.size()) {
+            throw new IllegalArgumentException(TAG + " : sides != mDimPercentages.size() sides = " + sides + " dimPercentages.size() = " + dimPercentages.size());
+        }
+        for (float percentage : dimPercentages) {
+            if (percentage < 0.0 || percentage > 1.0) {
+                throw new IllegalArgumentException(TAG + " : percentage = " + percentage);
+            }
+        }
+        mDimPercentages = dimPercentages;
+    }
+
+    /**
+     * @param color 维度顶点圆填充色
+     */
+    public void setColorDimCircle(@ColorInt int color) {
+        dimCircleColor = color;
+    }
+
+    /**
+     * @param color 维度顶点圆背景填充色
+     */
+    public void setColorDimCircleBackground(@ColorInt int color) {
+        dimCircleColorBackground = color;
+    }
+
+    /**
+     * @param color 多边形边颜色
+     */
+    public void setColorPolygonStroke(@ColorInt int color) {
+        polygonStrokePaint.setColor(color);
+    }
+
+    /**
+     * @param color 多边形内层填充色
+     */
+    public void setColorPolygonFill(@ColorInt int color) {
+        polygonInnerFillPaint.setColor(color);
+    }
+
+    /**
+     * @param color 各层顶点连线颜色
+     */
+    public void setColorVertexLinePaint(@ColorInt int color) {
+        vertexLinePaint.setColor(color);
+    }
+
+    /**
+     * @param color 维度区域填充色
+     */
+    public void setColorDimFill(@ColorInt int color) {
+        dimFillPaint.setColor(color);
+    }
+
+    /**
+     * @param color 维度区域边颜色
+     */
+    public void setColorDimStroke(@ColorInt int color) {
+        dimStrokePaint.setColor(color);
     }
 }

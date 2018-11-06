@@ -1,13 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
     <com.lyldding.library.SimplePolygonView
         android:id="@+id/demo_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:polygon_radiusMax="60" />
+
+    <com.lyldding.library.SimplePolygonView
+        android:id="@+id/demo_view1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:polygon_cornerRadius="10"
+        app:polygon_layers="3"
+        app:polygon_radiusMax="60"
+        app:polygon_rotation="270"
+        app:polygon_sides="3"
+        app:polygon_vertexLinePaintColor="@color/colorAccent" />
+
+    <com.lyldding.library.SimplePolygonView
+        android:id="@+id/demo_view2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:polygon_cornerRadius="7"
+        app:polygon_innerFillColor="#ffeebb"
+        app:polygon_innerLayer="2"
+        app:polygon_layers="4"
+        app:polygon_radiusMax="60"
+        app:polygon_rotation="270"
+        app:polygon_sides="3"
+        app:polygon_vertexLinePaintColor="@color/colorAccent" />
+
+    <com.lyldding.library.SimplePolygonView
+        android:id="@+id/demo_view3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:polygon_cornerRadius="7"
+        app:polygon_dimFillColor="#33123FFF"
+        app:polygon_innerFillColor="#ffeebb"
+        app:polygon_innerLayer="1"
+        app:polygon_layers="4"
+        app:polygon_radiusMax="80"
+        app:polygon_rotation="270"
+        app:polygon_sides="6"
+        app:polygon_vertexLinePaintColor="@color/colorAccent" />
 
 </LinearLayout>
