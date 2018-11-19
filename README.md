@@ -1,5 +1,5 @@
 
-SimplePolygonView 可以轻松构建构建M边N层的正多边形统计图，以及各维度的显示。
+SimplePolygonView 可以轻松构建构建M边N层的带圆角雷达图。
 
 blog：https://blog.csdn.net/lylddingHFFW/article/details/83789078
 
