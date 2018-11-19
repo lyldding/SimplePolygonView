@@ -122,6 +122,11 @@ public class SimplePolygonView extends View {
 
     private Context context;
 
+    private int paddingLeft;
+    private int paddingRight;
+    private int paddingTop;
+    private int paddingBottom;
+
     public SimplePolygonView(Context context) {
         this(context, null);
     }
@@ -163,10 +168,10 @@ public class SimplePolygonView extends View {
         dimCircleColor = array.getColor(R.styleable.SimplePolygonView_polygon_dimCircleColor, Color.RED);
 
         array.recycle();
-        init(context);
+        init();
     }
 
-    private void init(Context context) {
+    private void init() {
         mDimPercentages = new ArrayList<>();
         maxPointListX = new ArrayList<>();
         maxPointListY = new ArrayList<>();
@@ -231,6 +236,10 @@ public class SimplePolygonView extends View {
         centerX = getWidth() / 2;
         centerY = getHeight() / 2;
         radiusMaxScale -= outerStrokeWidth / 2;
+        canvas.clipRect(centerX - radiusMaxScale + getPaddingLeft(),
+                centerY - radiusMaxScale + getPaddingTop(),
+                centerX + radiusMaxScale - getPaddingTop(),
+                centerY + radiusMaxScale - getPaddingBottom());
         canvas.translate(centerX, centerY);
         canvas.rotate(rotation);
 
@@ -262,12 +271,10 @@ public class SimplePolygonView extends View {
         for (int i = 1; i <= layers; i++) {
             float radius = radiusMaxScale * i / layers;
             if (i == innerLayer) {
-                // polygonInnerFillPaint.setPathEffect(new CornerPathEffect(cornerRadius * i / layers));
                 PolygonDrawHelper.getInstance().drawPolygon(canvas, sides, centerX, centerY, radius, cornerRadius * i / layers, polygonInnerFillPaint);
             }
 
             polygonStrokePaint.setStrokeWidth(i != layers ? 1f : outerStrokeWidth);
-            //polygonStrokePaint.setPathEffect(new CornerPathEffect(cornerRadius * i / layers));
             PolygonDrawHelper.getInstance().drawPath(canvas, sides, centerX, centerY, radius, cornerRadius * i / layers, polygonStrokePaint);
         }
     }

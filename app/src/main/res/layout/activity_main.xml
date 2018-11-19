@@ -12,6 +12,10 @@
         android:id="@+id/demo_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingBottom="40dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
         app:polygon_radiusMax="60" />
     <!--view1-->
     <com.lyldding.library.SimplePolygonView
